@@ -1,32 +1,52 @@
-# Prerequisites
+# Ignore build directories
+/build/
+/bin/
+/obj/
+
+# Ignore CMake build files
+CMakeCache.txt
+CMakeFiles/
+Makefile
+Makefile.in
+CMakeLists.txt.user
+
+# Ignore compiled object files and executable binaries
+*.o
+*.a
+*.so
+*.out
+*.exe
+
+# Ignore IDE specific files
+.vscode/
+.idea/
+*.sublime-workspace
+*.sublime-project
+
+# Ignore temporary files
+*.log
+*.tmp
+*.swp
+
+# Ignore OS-specific files
+.DS_Store
+Thumbs.db
+
+# Ignore test output files
+*.gcda
+*.gcno
+*.dSYM/
+
+# Ignore dependencies
 *.d
 
-# Compiled Object files
-*.slo
-*.lo
-*.o
-*.obj
+# Ignore package manager files (e.g., for Conan or other package managers)
+conan.lock
+conanfile.py
+conanfile.txt
 
-# Precompiled Headers
-*.gch
-*.pch
+# Ignore Visual Studio files
+.vs/
 
-# Compiled Dynamic libraries
-*.so
-*.dylib
-*.dll
-
-# Fortran module files
-*.mod
-*.smod
-
-# Compiled Static libraries
-*.lai
-*.la
-*.a
-*.lib
-
-# Executables
-*.exe
-*.out
-*.app
+# Ignore build output directory
+/out/
