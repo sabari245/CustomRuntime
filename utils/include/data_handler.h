@@ -2,6 +2,7 @@
 
 #include <vector>
 #include <string>
+#include <opencv2/opencv.hpp>
 
 namespace loader {
 
@@ -17,6 +18,8 @@ namespace loader {
 
 		DataHandler(const std::string& dataPath, const std::string& labelPath);
 
+		cv::Mat getImage(int index);
 
+		std::vector<cv::Mat> getImages();
 	};
 }

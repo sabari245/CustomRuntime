@@ -1,7 +1,7 @@
 #include "format.h"
 #include <fmt/format.h>
 #include <iostream>
-
+#include <iomanip>
 
 std::ostream& operator<<(std::ostream& os, std::vector<int> vec) {
     os << "[";
@@ -13,6 +13,43 @@ std::ostream& operator<<(std::ostream& os, std::vector<int> vec) {
     }
     os << "]";
     return os;
+}
+
+std::ostream& operator<<(std::ostream& os, const std::vector<uint8_t>& vec) {
+    os << "[";
+    size_t size = vec.size();
+
+    if (size <= 6) {
+        for (size_t i = 0; i < size; ++i) {
+            os << static_cast<int>(vec[i]);
+            if (i != size - 1) {
+                os << ", ";
+            }
+        }
+    }
+    else {
+        for (size_t i = 0; i < 3; ++i) {
+            os << static_cast<int>(vec[i]);
+            if (i != 2) {
+                os << ", ";
+            }
+        }
+
+        os << ", ..., ";
+        for (size_t i = size - 3; i < size; ++i) {
+            os << static_cast<int>(vec[i]);
+            if (i != size - 1) {
+                os << ", ";
+            }
+        }
+    }
+    os << "]";
+    return os;
+}
+
+std::ostream& operator<<(std::ostream& os, uint8_t val) {
+	os << static_cast<int>(val);
+	return os;
 }
 
 std::ostream& operator<<(std::ostream& os, const std::vector<double>& vec) {

@@ -22,13 +22,17 @@ FetchContent_Declare(
   GIT_TAG        e69e5f977d458f2650bb346dadf2ad30c5320281) # 10.2.1
 FetchContent_MakeAvailable(fmt)
 
+find_package(OpenCV REQUIRED)
+
 # Add source to this project's executable.
-add_executable (CustomRuntime "main.cpp" "utils/src/model.cpp" "utils/src/format.cpp" "utils/src/data_handler.cpp")
+add_executable (CustomRuntime "main.cpp" "utils/src/model.cpp" "utils/src/format.cpp" "utils/src/data_handler.cpp" "inference/src/layers.cpp")
 
 target_include_directories(CustomRuntime PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/utils/include)
+target_include_directories(CustomRuntime PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/inference/include)
 
 target_link_libraries(CustomRuntime PRIVATE nlohmann_json::nlohmann_json)
 target_link_libraries(CustomRuntime PRIVATE fmt::fmt)
+target_link_libraries(CustomRuntime PRIVATE ${OpenCV_LIBS})
 
 set(CMAKE_CXX_STANDARD 17)
 

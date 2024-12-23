@@ -54,4 +54,26 @@ namespace loader {
 
 		labelStream.close();
 	}
+
+	cv::Mat DataHandler::getImage(int index) {
+		cv::Mat image(32, 32, CV_8UC3);
+		for (int channel = 0; channel < 3; channel++) {
+			for (int row = 0; row < 32; row++) {
+				for (int col = 0; col < 32; col++) {
+					// Access pixel at (row, col) in channel 'channel'
+					image.at<cv::Vec3b>(row, col)[channel] = datax[index * 3072 + row * 32 + col + channel * 1024];
+				}
+			}
+		}
+		return image;
+	}
+
+	std::vector<cv::Mat> DataHandler::getImages() {
+		std::vector<cv::Mat> images;
+		for (int i = 0; i < 10000; i++) {
+			images.push_back(getImage(i));
+		}
+		return images;
+	}
+
 }

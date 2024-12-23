@@ -7,6 +7,8 @@
 // Forward declarations for operator overloads
 std::ostream& operator<<(std::ostream& os, std::vector<int> vec);
 std::ostream& operator<<(std::ostream& os, const std::vector<double>& vec);
+std::ostream& operator<<(std::ostream& os, uint8_t val);
+std::ostream& operator<<(std::ostream& os, const std::vector<uint8_t>& vec);
 std::ostream& operator<<(std::ostream& os, const utils::ModelDataType& type);
 std::ostream& operator<<(std::ostream& os, const utils::ModelData& modelData);
 std::ostream& operator<<(std::ostream& os, const utils::LayerType& type);
