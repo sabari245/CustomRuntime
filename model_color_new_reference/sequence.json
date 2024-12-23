@@ -1,0 +1,364 @@
+[
+    {
+        "name": "StatefulPartitionedCall/sequential_1/conv2d_1/BiasAdd__6",
+        "operation": "Transpose",
+        "inputs": [
+            "inputs"
+        ],
+        "outputs": [
+            "StatefulPartitionedCall/sequential_1/conv2d_1/BiasAdd__6:0"
+        ],
+        "attributes": {
+            "perm": [
+                0,
+                3,
+                1,
+                2
+            ]
+        }
+    },
+    {
+        "name": "StatefulPartitionedCall/sequential_1/conv2d_1/BiasAdd",
+        "operation": "Conv",
+        "inputs": [
+            "StatefulPartitionedCall/sequential_1/conv2d_1/BiasAdd__6:0",
+            "StatefulPartitionedCall/sequential_1/conv2d_1/convolution/ReadVariableOp:0",
+            "StatefulPartitionedCall/sequential_1/conv2d_1/Squeeze:0"
+        ],
+        "outputs": [
+            "StatefulPartitionedCall/sequential_1/conv2d_1/BiasAdd:0"
+        ],
+        "attributes": {
+            "dilations": [
+                1,
+                1
+            ],
+            "strides": [
+                1,
+                1
+            ],
+            "kernel_shape": [
+                5,
+                5
+            ],
+            "pads": [
+                2,
+                2,
+                2,
+                2
+            ],
+            "group": 1
+        }
+    },
+    {
+        "name": "StatefulPartitionedCall/sequential_1/batch_normalization_1/batchnorm/mul_1",
+        "operation": "Mul",
+        "inputs": [
+            "StatefulPartitionedCall/sequential_1/conv2d_1/BiasAdd:0",
+            "StatefulPartitionedCall/sequential_1/batch_normalization_1/batchnorm/mul:0"
+        ],
+        "outputs": [
+            "StatefulPartitionedCall/sequential_1/batch_normalization_1/batchnorm/mul_1:0"
+        ],
+        "attributes": {}
+    },
+    {
+        "name": "StatefulPartitionedCall/sequential_1/batch_normalization_1/batchnorm/add_1",
+        "operation": "Add",
+        "inputs": [
+            "StatefulPartitionedCall/sequential_1/batch_normalization_1/batchnorm/mul_1:0",
+            "const_fold_opt__60"
+        ],
+        "outputs": [
+            "StatefulPartitionedCall/sequential_1/batch_normalization_1/batchnorm/add_1:0"
+        ],
+        "attributes": {}
+    },
+    {
+        "name": "StatefulPartitionedCall/sequential_1/activation_1/Relu",
+        "operation": "Relu",
+        "inputs": [
+            "StatefulPartitionedCall/sequential_1/batch_normalization_1/batchnorm/add_1:0"
+        ],
+        "outputs": [
+            "StatefulPartitionedCall/sequential_1/activation_1/Relu:0"
+        ],
+        "attributes": {}
+    },
+    {
+        "name": "StatefulPartitionedCall/sequential_1/max_pooling2d_1/MaxPool2d",
+        "operation": "MaxPool",
+        "inputs": [
+            "StatefulPartitionedCall/sequential_1/activation_1/Relu:0"
+        ],
+        "outputs": [
+            "StatefulPartitionedCall/sequential_1/max_pooling2d_1/MaxPool2d:0"
+        ],
+        "attributes": {
+            "strides": [
+                2,
+                2
+            ],
+            "kernel_shape": [
+                2,
+                2
+            ]
+        }
+    },
+    {
+        "name": "StatefulPartitionedCall/sequential_1/conv2d_1_2/BiasAdd",
+        "operation": "Conv",
+        "inputs": [
+            "StatefulPartitionedCall/sequential_1/max_pooling2d_1/MaxPool2d:0",
+            "StatefulPartitionedCall/sequential_1/conv2d_1_2/convolution/ReadVariableOp:0",
+            "StatefulPartitionedCall/sequential_1/conv2d_1_2/Squeeze:0"
+        ],
+        "outputs": [
+            "StatefulPartitionedCall/sequential_1/conv2d_1_2/BiasAdd:0"
+        ],
+        "attributes": {
+            "dilations": [
+                1,
+                1
+            ],
+            "strides": [
+                1,
+                1
+            ],
+            "kernel_shape": [
+                3,
+                3
+            ],
+            "pads": [
+                1,
+                1,
+                1,
+                1
+            ],
+            "group": 1
+        }
+    },
+    {
+        "name": "StatefulPartitionedCall/sequential_1/batch_normalization_1_2/batchnorm/mul_1",
+        "operation": "Mul",
+        "inputs": [
+            "StatefulPartitionedCall/sequential_1/conv2d_1_2/BiasAdd:0",
+            "StatefulPartitionedCall/sequential_1/batch_normalization_1_2/batchnorm/mul:0"
+        ],
+        "outputs": [
+            "StatefulPartitionedCall/sequential_1/batch_normalization_1_2/batchnorm/mul_1:0"
+        ],
+        "attributes": {}
+    },
+    {
+        "name": "StatefulPartitionedCall/sequential_1/batch_normalization_1_2/batchnorm/add_1",
+        "operation": "Add",
+        "inputs": [
+            "StatefulPartitionedCall/sequential_1/batch_normalization_1_2/batchnorm/mul_1:0",
+            "const_fold_opt__59"
+        ],
+        "outputs": [
+            "StatefulPartitionedCall/sequential_1/batch_normalization_1_2/batchnorm/add_1:0"
+        ],
+        "attributes": {}
+    },
+    {
+        "name": "StatefulPartitionedCall/sequential_1/activation_1_2/Relu",
+        "operation": "Relu",
+        "inputs": [
+            "StatefulPartitionedCall/sequential_1/batch_normalization_1_2/batchnorm/add_1:0"
+        ],
+        "outputs": [
+            "StatefulPartitionedCall/sequential_1/activation_1_2/Relu:0"
+        ],
+        "attributes": {}
+    },
+    {
+        "name": "StatefulPartitionedCall/sequential_1/max_pooling2d_1_2/MaxPool2d",
+        "operation": "MaxPool",
+        "inputs": [
+            "StatefulPartitionedCall/sequential_1/activation_1_2/Relu:0"
+        ],
+        "outputs": [
+            "StatefulPartitionedCall/sequential_1/max_pooling2d_1_2/MaxPool2d:0"
+        ],
+        "attributes": {
+            "strides": [
+                2,
+                2
+            ],
+            "kernel_shape": [
+                2,
+                2
+            ]
+        }
+    },
+    {
+        "name": "StatefulPartitionedCall/sequential_1/conv2d_2_1/BiasAdd",
+        "operation": "Conv",
+        "inputs": [
+            "StatefulPartitionedCall/sequential_1/max_pooling2d_1_2/MaxPool2d:0",
+            "StatefulPartitionedCall/sequential_1/conv2d_2_1/convolution/ReadVariableOp:0",
+            "StatefulPartitionedCall/sequential_1/conv2d_2_1/Squeeze:0"
+        ],
+        "outputs": [
+            "StatefulPartitionedCall/sequential_1/conv2d_2_1/BiasAdd:0"
+        ],
+        "attributes": {
+            "dilations": [
+                1,
+                1
+            ],
+            "strides": [
+                1,
+                1
+            ],
+            "kernel_shape": [
+                3,
+                3
+            ],
+            "pads": [
+                1,
+                1,
+                1,
+                1
+            ],
+            "group": 1
+        }
+    },
+    {
+        "name": "StatefulPartitionedCall/sequential_1/batch_normalization_2_1/batchnorm/mul_1",
+        "operation": "Mul",
+        "inputs": [
+            "StatefulPartitionedCall/sequential_1/conv2d_2_1/BiasAdd:0",
+            "StatefulPartitionedCall/sequential_1/batch_normalization_2_1/batchnorm/mul:0"
+        ],
+        "outputs": [
+            "StatefulPartitionedCall/sequential_1/batch_normalization_2_1/batchnorm/mul_1:0"
+        ],
+        "attributes": {}
+    },
+    {
+        "name": "StatefulPartitionedCall/sequential_1/batch_normalization_2_1/batchnorm/add_1",
+        "operation": "Add",
+        "inputs": [
+            "StatefulPartitionedCall/sequential_1/batch_normalization_2_1/batchnorm/mul_1:0",
+            "const_fold_opt__57"
+        ],
+        "outputs": [
+            "StatefulPartitionedCall/sequential_1/batch_normalization_2_1/batchnorm/add_1:0"
+        ],
+        "attributes": {}
+    },
+    {
+        "name": "StatefulPartitionedCall/sequential_1/activation_2_1/Relu",
+        "operation": "Relu",
+        "inputs": [
+            "StatefulPartitionedCall/sequential_1/batch_normalization_2_1/batchnorm/add_1:0"
+        ],
+        "outputs": [
+            "StatefulPartitionedCall/sequential_1/activation_2_1/Relu:0"
+        ],
+        "attributes": {}
+    },
+    {
+        "name": "Transpose__49",
+        "operation": "Transpose",
+        "inputs": [
+            "StatefulPartitionedCall/sequential_1/activation_2_1/Relu:0"
+        ],
+        "outputs": [
+            "Transpose__49:0"
+        ],
+        "attributes": {
+            "perm": [
+                0,
+                2,
+                3,
+                1
+            ]
+        }
+    },
+    {
+        "name": "StatefulPartitionedCall/sequential_1/flatten_1/Reshape",
+        "operation": "Reshape",
+        "inputs": [
+            "Transpose__49:0",
+            "const_fold_opt__55"
+        ],
+        "outputs": [
+            "StatefulPartitionedCall/sequential_1/flatten_1/Reshape:0"
+        ],
+        "attributes": {}
+    },
+    {
+        "name": "StatefulPartitionedCall/sequential_1/dense_1/MatMul",
+        "operation": "MatMul",
+        "inputs": [
+            "StatefulPartitionedCall/sequential_1/flatten_1/Reshape:0",
+            "StatefulPartitionedCall/sequential_1/dense_1/Cast/ReadVariableOp:0"
+        ],
+        "outputs": [
+            "StatefulPartitionedCall/sequential_1/dense_1/MatMul:0"
+        ],
+        "attributes": {}
+    },
+    {
+        "name": "StatefulPartitionedCall/sequential_1/dense_1/BiasAdd",
+        "operation": "Add",
+        "inputs": [
+            "StatefulPartitionedCall/sequential_1/dense_1/MatMul:0",
+            "StatefulPartitionedCall/sequential_1/dense_1/BiasAdd/ReadVariableOp:0"
+        ],
+        "outputs": [
+            "StatefulPartitionedCall/sequential_1/dense_1/BiasAdd:0"
+        ],
+        "attributes": {}
+    },
+    {
+        "name": "StatefulPartitionedCall/sequential_1/dense_1/Relu",
+        "operation": "Relu",
+        "inputs": [
+            "StatefulPartitionedCall/sequential_1/dense_1/BiasAdd:0"
+        ],
+        "outputs": [
+            "StatefulPartitionedCall/sequential_1/dense_1/Relu:0"
+        ],
+        "attributes": {}
+    },
+    {
+        "name": "StatefulPartitionedCall/sequential_1/dense_1_2/MatMul",
+        "operation": "MatMul",
+        "inputs": [
+            "StatefulPartitionedCall/sequential_1/dense_1/Relu:0",
+            "StatefulPartitionedCall/sequential_1/dense_1_2/Cast/ReadVariableOp:0"
+        ],
+        "outputs": [
+            "StatefulPartitionedCall/sequential_1/dense_1_2/MatMul:0"
+        ],
+        "attributes": {}
+    },
+    {
+        "name": "StatefulPartitionedCall/sequential_1/dense_1_2/BiasAdd",
+        "operation": "Add",
+        "inputs": [
+            "StatefulPartitionedCall/sequential_1/dense_1_2/MatMul:0",
+            "StatefulPartitionedCall/sequential_1/dense_1_2/BiasAdd/ReadVariableOp:0"
+        ],
+        "outputs": [
+            "StatefulPartitionedCall/sequential_1/dense_1_2/BiasAdd:0"
+        ],
+        "attributes": {}
+    },
+    {
+        "name": "StatefulPartitionedCall/sequential_1/dense_1_2/Softmax",
+        "operation": "Softmax",
+        "inputs": [
+            "StatefulPartitionedCall/sequential_1/dense_1_2/BiasAdd:0"
+        ],
+        "outputs": [
+            "output_0"
+        ],
+        "attributes": {}
+    }
+]

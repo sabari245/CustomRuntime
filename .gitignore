@@ -50,3 +50,9 @@ conanfile.txt
 
 # Ignore build output directory
 /out/
+
+# Ignore the model files
+model_color_export/
+model_color_new_export/
+
+dataset/

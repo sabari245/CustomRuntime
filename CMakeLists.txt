@@ -11,8 +11,24 @@ endif()
 
 project ("CustomRuntime")
 
+include(FetchContent)
+
+FetchContent_Declare(json URL https://github.com/nlohmann/json/releases/download/v3.11.3/json.tar.xz)
+FetchContent_MakeAvailable(json)
+
+FetchContent_Declare(
+  fmt
+  GIT_REPOSITORY https://github.com/fmtlib/fmt
+  GIT_TAG        e69e5f977d458f2650bb346dadf2ad30c5320281) # 10.2.1
+FetchContent_MakeAvailable(fmt)
+
 # Add source to this project's executable.
-add_executable (CustomRuntime "main.cpp" "main.h")
+add_executable (CustomRuntime "main.cpp" "utils/src/model.cpp" "utils/src/format.cpp" "utils/src/data_handler.cpp")
+
+target_include_directories(CustomRuntime PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/utils/include)
+
+target_link_libraries(CustomRuntime PRIVATE nlohmann_json::nlohmann_json)
+target_link_libraries(CustomRuntime PRIVATE fmt::fmt)
 
 set(CMAKE_CXX_STANDARD 17)
 
