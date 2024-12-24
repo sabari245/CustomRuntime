@@ -9,61 +9,57 @@ namespace layers {
 
     template <typename T>
     void Layers::transpose(
-        const std::vector<int>& shape,
-        const std::vector<int>& stride,
-        const std::vector<T>& datax,
+        const ArrayND<T>& in,
         const std::vector<int>& permutation,
-        std::vector<int>& outShape,
-        std::vector<int>& outStride,
-        std::vector<T>& outDatax
+        ArrayND<T>& out
     ) {
         // Validate input
-        if (shape.size() != permutation.size()) {
+        if (in.shape.size() != permutation.size()) {
             throw std::invalid_argument("Permutation size must match matrix dimensions");
         }
 
         // Rearrange shape according to permutation
-        outShape.resize(shape.size());
+        out.shape.resize(in.shape.size());
         for (size_t i = 0; i < permutation.size(); i++) {
-            outShape[i] = shape[permutation[i]];
+            out.shape[i] = in.shape[permutation[i]];
         }
 
         // Calculate new strides
-        outStride.resize(shape.size());
+        out.stride.resize(in.shape.size());
         int current_stride = 1;
-        for (int i = outShape.size() - 1; i >= 0; i--) {
-            outStride[i] = current_stride;
-            current_stride *= outShape[i];
+        for (int i = out.shape.size() - 1; i >= 0; i--) {
+            out.stride[i] = current_stride;
+            current_stride *= out.shape[i];
         }
 
         // Initialize output data
-        int total_size = std::accumulate(shape.begin(), shape.end(), 1, std::multiplies<int>());
-        outDatax.resize(total_size);
+        int total_size = std::accumulate(in.shape.begin(), in.shape.end(), 1, std::multiplies<int>());
+        out.data.resize(total_size);
 
         // Create index arrays for iteration
-        std::vector<int> current_idx(shape.size(), 0);
+        std::vector<int> current_idx(in.shape.size(), 0);
 
         // Iterate through all elements
         for (int flat_idx = 0; flat_idx < total_size; flat_idx++) {
             // Calculate source index
             int src_idx = 0;
-            for (size_t dim = 0; dim < shape.size(); dim++) {
-                src_idx += current_idx[dim] * stride[dim];
+            for (size_t dim = 0; dim < in.shape.size(); dim++) {
+                src_idx += current_idx[dim] * in.stride[dim];
             }
 
             // Calculate destination index
             int dst_idx = 0;
-            for (size_t dim = 0; dim < outShape.size(); dim++) {
-                dst_idx += current_idx[permutation[dim]] * outStride[dim];
+            for (size_t dim = 0; dim < out.shape.size(); dim++) {
+                dst_idx += current_idx[permutation[dim]] * out.stride[dim];
             }
 
             // Copy data
-            outDatax[dst_idx] = datax[src_idx];
+            out.data[dst_idx] = in.data[src_idx];
 
             // Update indices
-            for (int dim = shape.size() - 1; dim >= 0; dim--) {
+            for (int dim = in.shape.size() - 1; dim >= 0; dim--) {
                 current_idx[dim]++;
-                if (current_idx[dim] < shape[dim]) {
+                if (current_idx[dim] < in.shape[dim]) {
                     break;
                 }
                 current_idx[dim] = 0;
@@ -71,7 +67,9 @@ namespace layers {
         }
     }
 
-    template void Layers::transpose<int>(const std::vector<int>&, const std::vector<int>&, const std::vector<int>&, const std::vector<int>&, std::vector<int>&, std::vector<int>&, std::vector<int>&);
-    template void Layers::transpose<float>(const std::vector<int>&, const std::vector<int>&, const std::vector<float>&, const std::vector<int>&, std::vector<int>&, std::vector<int>&, std::vector<float>&);
-    template void Layers::transpose<double>(const std::vector<int>&, const std::vector<int>&, const std::vector<double>&, const std::vector<int>&, std::vector<int>&, std::vector<int>&, std::vector<double>&);
+    // Explicit template instantiations (if needed in a separate compilation unit)
+    template void Layers::transpose<int>(const ArrayND<int>&, const std::vector<int>&, ArrayND<int>&);
+    template void Layers::transpose<float>(const ArrayND<float>&, const std::vector<int>&, ArrayND<float>&);
+    template void Layers::transpose<double>(const ArrayND<double>&, const std::vector<int>&, ArrayND<double>&);
+	template void Layers::transpose<uint8_t>(const ArrayND<uint8_t>&, const std::vector<int>&, ArrayND<uint8_t>&);
 }

@@ -4,17 +4,32 @@
 
 namespace layers {
 
+	template <typename T>
+	struct ArrayND {
+		std::vector<int> shape;
+		std::vector<int> stride;
+		std::vector<T> data;
+	};
+
 	class Layers {
 	public:
 		template <typename T>
 		void transpose(
-			const std::vector<int>& shape,
-			const std::vector<int>& stride,
-			const std::vector<T>& datax,
+			const ArrayND<T>& in,
 			const std::vector<int>& permutation,
-			std::vector<int>& outShape,
-			std::vector<int>& outStride,
-			std::vector<T>& outDatax
+			ArrayND<T>& out
 		);
+
+		template <typename T>
+		void conv2d(
+			const ArrayND<T>& in,
+			const ArrayND<T>& weights,
+			const ArrayND<T>& bias,
+			const std::vector<int>& padding,
+			const std::vector<int>& stride,
+			const std::vector<int>& kernel_shape,
+			ArrayND<T>& out
+		);
+
 	};
 }
