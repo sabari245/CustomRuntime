@@ -150,21 +150,114 @@ namespace utility {
 
 
     template <typename T>
-	types::ArrayND<T> reshape(const types::ArrayND<T>& array, const std::vector<int>& newShape) {
-		// Validate input
-		if (std::accumulate(newShape.begin(), newShape.end(), 1, std::multiplies<int>()) != array.data.size()) {
-			throw std::invalid_argument("New shape must have same number of elements as original array");
-		}
-		types::ArrayND<T> reshapedArray;
-		reshapedArray.shape = newShape;
-		reshapedArray.stride = getStrideFromShape(newShape);
-		reshapedArray.data = array.data;
-		return reshapedArray;
-	}
+    types::ArrayND<T> reshape(const types::ArrayND<T>& array, const std::vector<int>& newShape) {
+        // Validate input
+        int total_elements = array.data.size();
+        int newShape_product = 1;
+        int negative_one_count = 0;
+        int inferred_dimension = -1;
+
+        for (size_t i = 0; i < newShape.size(); ++i) {
+            if (newShape[i] == -1) {
+                negative_one_count++;
+                inferred_dimension = i;
+            }
+            else {
+                if (newShape[i] <= 0) {
+                    throw std::invalid_argument("Shape dimensions must be positive or -1");
+                }
+                newShape_product *= newShape[i];
+            }
+        }
+
+        // Ensure only one dimension is marked as -1
+        if (negative_one_count > 1) {
+            throw std::invalid_argument("Only one dimension can be inferred (-1)");
+        }
+
+        // Infer the dimension marked as -1
+        std::vector<int> finalShape = newShape;
+        if (negative_one_count == 1) {
+            if (total_elements % newShape_product != 0) {
+                throw std::invalid_argument("Total size of elements is not divisible to infer the -1 dimension");
+            }
+            finalShape[inferred_dimension] = total_elements / newShape_product;
+        }
+        else if (newShape_product != total_elements) {
+            throw std::invalid_argument("New shape must have the same total number of elements as the original array");
+        }
+
+        // Create the reshaped array
+        types::ArrayND<T> reshapedArray;
+        reshapedArray.shape = finalShape;
+        reshapedArray.stride = getStrideFromShape(finalShape);
+        reshapedArray.data = array.data;
+
+        return reshapedArray;
+    }
+
 
 	template types::ArrayND<double> reshape(const types::ArrayND<double>& array, const std::vector<int>& newShape);
 	template types::ArrayND<int> reshape(const types::ArrayND<int>& array, const std::vector<int>& newShape);
 	template types::ArrayND<uint8_t> reshape(const types::ArrayND<uint8_t>& array, const std::vector<int>& newShape);
+
+    template <typename T>
+    types::ArrayND<T> addPadding(const types::ArrayND<T>& array, const std::vector<int>& padding) {
+        types::ArrayND<T> paddedArray;
+
+        // Check if input is 2D or 3D
+        if (array.shape.size() == 2) {
+            // Original 2D implementation
+            paddedArray.shape = {
+                array.shape[0] + padding[0] + padding[1],
+                array.shape[1] + padding[2] + padding[3]
+            };
+            paddedArray.stride = getStrideFromShape(paddedArray.shape);
+            paddedArray.data.resize(paddedArray.shape[0] * paddedArray.shape[1], 0);
+
+            for (int i = 0; i < array.shape[0]; i++) {
+                for (int j = 0; j < array.shape[1]; j++) {
+                    paddedArray.data[(i + padding[0]) * paddedArray.stride[0] + j + padding[2]] =
+                        array.data[i * array.stride[0] + j];
+                }
+            }
+        }
+        else if (array.shape.size() == 3) {
+            // New 3D implementation
+            // First dimension (channels) doesn't get padding
+            paddedArray.shape = {
+                array.shape[0],  // channels remain unchanged
+                array.shape[1] + padding[0] + padding[1],  // height + vertical padding
+                array.shape[2] + padding[2] + padding[3]   // width + horizontal padding
+            };
+            paddedArray.stride = getStrideFromShape(paddedArray.shape);
+            paddedArray.data.resize(paddedArray.shape[0] * paddedArray.shape[1] * paddedArray.shape[2], 0);
+
+            // Copy data for each channel
+            for (int c = 0; c < array.shape[0]; c++) {
+                for (int i = 0; i < array.shape[1]; i++) {
+                    for (int j = 0; j < array.shape[2]; j++) {
+                        // Calculate indices for source and destination
+                        int srcIdx = c * array.stride[0] + i * array.stride[1] + j * array.stride[2];
+                        int dstIdx = c * paddedArray.stride[0] +
+                            (i + padding[0]) * paddedArray.stride[1] +
+                            (j + padding[2]) * paddedArray.stride[2];
+
+                        paddedArray.data[dstIdx] = array.data[srcIdx];
+                    }
+                }
+            }
+        }
+        else {
+            throw std::runtime_error("addPadding only supports 2D and 3D arrays");
+        }
+
+        return paddedArray;
+    }
+
+	template types::ArrayND<double> addPadding(const types::ArrayND<double>& array, const std::vector<int>& padding);
+	template types::ArrayND<int> addPadding(const types::ArrayND<int>& array, const std::vector<int>& padding);
+	template types::ArrayND<uint8_t> addPadding(const types::ArrayND<uint8_t>& array, const std::vector<int>& padding);
 
     template <typename T>
     types::ArrayND<T> transpose(const types::ArrayND<T>& array, const std::vector<int>& perm) {
@@ -260,6 +353,7 @@ namespace utility {
 		types::ArrayND<T> result;
 		result.shape = array.shape;
 		result.data.resize(array.data.size());
+		result.stride = array.stride;
 		std::transform(array.data.begin(), array.data.end(), result.data.begin(), [scalar](T val) { return val + scalar; });
 		return result;
 	}
@@ -267,6 +361,23 @@ namespace utility {
 	template types::ArrayND<double> add(const types::ArrayND<double>& array, double scalar);
 	template types::ArrayND<int> add(const types::ArrayND<int>& array, int scalar);
 	template types::ArrayND<uint8_t> add(const types::ArrayND<uint8_t>& array, uint8_t scalar);
+
+
+	template <typename T>
+    types::ArrayND<T> mul(const types::ArrayND<T>& array1, const types::ArrayND<T>& array2) {
+        if (array1.shape != array2.shape) {
+            throw std::runtime_error("Array shapes must match for multiplication");
+        }
+        types::ArrayND<T> result;
+        result.shape = array1.shape;
+        result.data.resize(array1.data.size());
+        std::transform(array1.data.begin(), array1.data.end(), array2.data.begin(), result.data.begin(), std::multiplies<T>());
+        return result;
+    }
+
+	template types::ArrayND<double> mul(const types::ArrayND<double>& array1, const types::ArrayND<double>& array2);
+	template types::ArrayND<int> mul(const types::ArrayND<int>& array1, const types::ArrayND<int>& array2);
+	template types::ArrayND<uint8_t> mul(const types::ArrayND<uint8_t>& array1, const types::ArrayND<uint8_t>& array2);
 
 	// Miscilaneous functions
 
@@ -278,4 +389,24 @@ namespace utility {
 		return stride;
 	}
 
+    template <typename T>
+	int getOffset(const types::ArrayND<T>& array, const std::vector<int>& indices){ 
+		if (indices.size() != array.shape.size()) { 
+			throw std::runtime_error("Invalid number of indices");
+		}
+        int offset = 0;
+		for (size_t i = 0; i < indices.size(); i++) {
+			
+			if (indices[i] < 0 || indices[i] >= array.shape[i]) {
+				throw std::runtime_error("Index out of bounds");
+			}
+
+            offset += indices[i] * array.stride[i];
+		}
+		return offset;
+	}
+
+	template int getOffset(const types::ArrayND<int>& array, const std::vector<int>& indices);
+	template int getOffset(const types::ArrayND<double>& array, const std::vector<int>& indices);
+	template int getOffset(const types::ArrayND<uint8_t>& array, const std::vector<int>& indices);
 }

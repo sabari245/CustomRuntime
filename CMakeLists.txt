@@ -57,7 +57,17 @@ target_link_libraries(UtilityTest PRIVATE nlohmann_json::nlohmann_json)
 target_link_libraries(UtilityTest PRIVATE fmt::fmt)
 target_link_libraries(UtilityTest PRIVATE GTest::gtest_main)
 
+add_executable(LayerTest "tests/layer_test.cpp" "utils/src/types.cpp" "utils/src/functions.cpp" "inference/src/layers.cpp")
+
+target_include_directories(LayerTest PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/utils/include)
+target_include_directories(LayerTest PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/inference/include)
+
+target_link_libraries(LayerTest PRIVATE nlohmann_json::nlohmann_json)
+target_link_libraries(LayerTest PRIVATE fmt::fmt)
+target_link_libraries(LayerTest PRIVATE GTest::gtest_main)
+
 gtest_discover_tests(UtilityTest)
+gtest_discover_tests(LayerTest)
 
 # Setting the C++ Standard globally for the project
 set(CMAKE_CXX_STANDARD 17)
@@ -71,10 +81,14 @@ set_property(TARGET CustomRuntime PROPERTY CXX_EXTENSIONS OFF)
 set_property(TARGET UtilityTest PROPERTY CXX_STANDARD 17)
 set_property(TARGET UtilityTest PROPERTY CXX_STANDARD_REQUIRED ON)
 set_property(TARGET UtilityTest PROPERTY CXX_EXTENSIONS OFF)
+set_property(TARGET LayerTest PROPERTY CXX_STANDARD 17)
+set_property(TARGET LayerTest PROPERTY CXX_STANDARD_REQUIRED ON)
+set_property(TARGET LayerTest PROPERTY CXX_EXTENSIONS OFF)
 
 if (CMAKE_VERSION VERSION_GREATER 3.12)
     set_property(TARGET CustomRuntime PROPERTY CXX_STANDARD 20)
     set_property(TARGET UtilityTest PROPERTY CXX_STANDARD 20)
+    set_property(TARGET LayerTest PROPERTY CXX_STANDARD 20)
 endif()
 
 # TODO: Add tests and install targets if needed.
