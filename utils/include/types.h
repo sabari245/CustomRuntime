@@ -62,13 +62,19 @@ namespace types {
 		std::map<AttributeType, std::vector<int>> attributes;
 	};
 
+	template <typename T>
+	void printVector(std::ostream& os, const std::vector<T>& vec);
+
+	void printVectorDouble(std::ostream& os, const std::vector<double>& vec);
+
 	std::ostream& operator<<(std::ostream& os, const LayerData& layerData);
 	std::ostream& operator<<(std::ostream& os, const LayerType& type);
 	std::ostream& operator<<(std::ostream& os, const AttributeType& type);
 
-	template <typename T>
-	std::ostream& operator<<(std::ostream& os, const std::vector<T>& vec);
 	
 	template <typename T>
 	std::ostream& operator<<(std::ostream& os, const ArrayND<T>& array);
 }
+
+template <typename T>
+std::ostream& operator<<(std::ostream& os, const std::vector<T>& vec);

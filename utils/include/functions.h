@@ -28,6 +28,9 @@ namespace utility {
 	types::ArrayND<T> reshape(const types::ArrayND<T>& array, const std::vector<int>& newShape);
 
 	template <typename T>
+	void reshape_inplace(types::ArrayND<T>& array, const std::vector<int>& newShape);
+
+	template <typename T>
 	types::ArrayND<T> addPadding(const types::ArrayND<T>& array, const std::vector<int>& padding);
 
 	template <typename T>
@@ -50,4 +53,7 @@ namespace utility {
 
 	template <typename T>
 	int getOffset(const types::ArrayND<T>& array, const std::vector<int>& indices);
+
+	template <typename T>
+	types::ArrayND<T> convertUint8ToType(const types::ArrayND<uint8_t>& array);
 }

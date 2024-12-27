@@ -7,15 +7,6 @@
 namespace layers {
 
 	class Layers {
-	private:
-		template <typename T>
-		types::ArrayND<T> convolutionOperation(
-			const types::ArrayND<T>& data,
-			const types::ArrayND<T>& kernel,
-			const std::vector<int>& padding,
-			const std::vector<int>& stride
-		);
-
 	public:
 		template <typename T>
 		types::ArrayND<T> transpose(

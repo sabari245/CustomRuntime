@@ -107,24 +107,6 @@ namespace types {
     }
 
     template <typename T>
-    std::ostream& operator<<(std::ostream& os, const std::vector<T>& vec) {
-        printVector(os, vec);
-        return os;
-    }
-
-    template <>
-    std::ostream& operator<<(std::ostream& os, const std::vector<uint8_t>& vec) {
-        printVector(os, vec);
-        return os;
-    }
-
-    template <>
-    std::ostream& operator<<(std::ostream& os, const std::vector<double>& vec) {
-        printVectorDouble(os, vec);
-        return os;
-    }
-
-    template <typename T>
     std::ostream& operator<<(std::ostream& os, const ArrayND<T>& array) {
         os << "Shape: ";
         printVector(os, array.shape);
@@ -139,8 +121,27 @@ namespace types {
     template std::ostream& operator<<(std::ostream& os, const ArrayND<int>& array);
     template std::ostream& operator<<(std::ostream& os, const ArrayND<double>& array);
     template std::ostream& operator<<(std::ostream& os, const ArrayND<uint8_t>& array);
-
-    template std::ostream& operator<<(std::ostream& os, const std::vector<int>& vec);
-    template std::ostream& operator<<(std::ostream& os, const std::vector<double>& vec);
-    template std::ostream& operator<<(std::ostream& os, const std::vector<uint8_t>& vec);
 }
+
+
+template <typename T>
+std::ostream& operator<<(std::ostream& os, const std::vector<T>& vec) {
+    types::printVector(os, vec);
+    return os;
+}
+
+template <>
+std::ostream& operator<<(std::ostream& os, const std::vector<uint8_t>& vec) {
+    types::printVector(os, vec);
+    return os;
+}
+
+template <>
+std::ostream& operator<<(std::ostream& os, const std::vector<double>& vec) {
+    types::printVectorDouble(os, vec);
+    return os;
+}
+
+template std::ostream& operator<<(std::ostream& os, const std::vector<int>& vec);
+template std::ostream& operator<<(std::ostream& os, const std::vector<double>& vec);
+template std::ostream& operator<<(std::ostream& os, const std::vector<uint8_t>& vec);

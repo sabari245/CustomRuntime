@@ -202,62 +202,117 @@ namespace utility {
 	template types::ArrayND<uint8_t> reshape(const types::ArrayND<uint8_t>& array, const std::vector<int>& newShape);
 
     template <typename T>
+    void reshape_inplace(types::ArrayND<T>& array, const std::vector<int>& newShape) {
+        // Validate input
+        int total_elements = array.data.size();
+        int newShape_product = 1;
+        int negative_one_count = 0;
+        int inferred_dimension = -1;
+
+        // Check dimensions and calculate product
+        for (size_t i = 0; i < newShape.size(); ++i) {
+            if (newShape[i] == -1) {
+                negative_one_count++;
+                inferred_dimension = i;
+            }
+            else {
+                if (newShape[i] <= 0) {
+                    throw std::invalid_argument("Shape dimensions must be positive or -1");
+                }
+                newShape_product *= newShape[i];
+            }
+        }
+
+        // Ensure only one dimension is marked as -1
+        if (negative_one_count > 1) {
+            throw std::invalid_argument("Only one dimension can be inferred (-1)");
+        }
+
+        // Infer the dimension marked as -1
+        std::vector<int> finalShape = newShape;
+        if (negative_one_count == 1) {
+            if (total_elements % newShape_product != 0) {
+                throw std::invalid_argument("Total size of elements is not divisible to infer the -1 dimension");
+            }
+            finalShape[inferred_dimension] = total_elements / newShape_product;
+        }
+        else if (newShape_product != total_elements) {
+            throw std::invalid_argument("New shape must have the same total number of elements as the original array");
+        }
+
+        // Modify the array in place
+        array.shape = finalShape;
+        array.stride = getStrideFromShape(finalShape);
+    }
+
+    template void reshape_inplace(types::ArrayND<double>& array, const std::vector<int>& newShape);
+    template void reshape_inplace(types::ArrayND<int>& array, const std::vector<int>& newShape);
+    template void reshape_inplace(types::ArrayND<uint8_t>& array, const std::vector<int>& newShape);
+
+    template <typename T>
     types::ArrayND<T> addPadding(const types::ArrayND<T>& array, const std::vector<int>& padding) {
-        types::ArrayND<T> paddedArray;
-
-        // Check if input is 2D or 3D
-        if (array.shape.size() == 2) {
-            // Original 2D implementation
-            paddedArray.shape = {
-                array.shape[0] + padding[0] + padding[1],
-                array.shape[1] + padding[2] + padding[3]
-            };
-            paddedArray.stride = getStrideFromShape(paddedArray.shape);
-            paddedArray.data.resize(paddedArray.shape[0] * paddedArray.shape[1], 0);
-
-            for (int i = 0; i < array.shape[0]; i++) {
-                for (int j = 0; j < array.shape[1]; j++) {
-                    paddedArray.data[(i + padding[0]) * paddedArray.stride[0] + j + padding[2]] =
-                        array.data[i * array.stride[0] + j];
-                }
-            }
+        if (array.shape.size() < 2) {
+            throw std::runtime_error("Array must have at least 2 dimensions");
         }
-        else if (array.shape.size() == 3) {
-            // New 3D implementation
-            // First dimension (channels) doesn't get padding
-            paddedArray.shape = {
-                array.shape[0],  // channels remain unchanged
-                array.shape[1] + padding[0] + padding[1],  // height + vertical padding
-                array.shape[2] + padding[2] + padding[3]   // width + horizontal padding
-            };
-            paddedArray.stride = getStrideFromShape(paddedArray.shape);
-            paddedArray.data.resize(paddedArray.shape[0] * paddedArray.shape[1] * paddedArray.shape[2], 0);
+        if (padding.size() != 4) {
+            throw std::runtime_error("Padding must contain exactly 4 values [top, right, bottom, left]");
+        }
 
-            // Copy data for each channel
-            for (int c = 0; c < array.shape[0]; c++) {
-                for (int i = 0; i < array.shape[1]; i++) {
-                    for (int j = 0; j < array.shape[2]; j++) {
-                        // Calculate indices for source and destination
-                        int srcIdx = c * array.stride[0] + i * array.stride[1] + j * array.stride[2];
-                        int dstIdx = c * paddedArray.stride[0] +
-                            (i + padding[0]) * paddedArray.stride[1] +
-                            (j + padding[2]) * paddedArray.stride[2];
 
-                        paddedArray.data[dstIdx] = array.data[srcIdx];
+        // Modify only the last two dimensions (height and width)
+        const size_t height_dim = array.shape.size() - 2;
+        const size_t width_dim = array.shape.size() - 1;
+
+		std::vector<int> paddedShape = array.shape;
+		paddedShape[height_dim] += (padding[0] + padding[2]);
+		paddedShape[width_dim] += (padding[1] + padding[3]);
+
+		types::ArrayND<T> paddedArray = createZeros<T>(paddedShape);
+
+        // Calculate the product of dimensions before height (batch size * channels * ...)
+        size_t outer_dims_product = 1;
+        for (size_t i = 0; i < height_dim; ++i) {
+            outer_dims_product *= array.shape[i];
+        }
+
+        std::vector<size_t> idx(array.shape.size(), 0);
+
+        for (size_t outer = 0; outer < outer_dims_product; ++outer) {
+            size_t temp = outer;
+            for (size_t i = 0; i < height_dim; ++i) {
+                idx[i] = temp % array.shape[i];
+                temp /= array.shape[i];
+            }
+
+            // Iterate over height and width
+            for (int h = 0; h < array.shape[height_dim]; ++h) {
+                for (int w = 0; w < array.shape[width_dim]; ++w) {
+                    idx[height_dim] = h;
+                    idx[width_dim] = w;
+
+                    size_t src_idx = 0;
+                    for (size_t i = 0; i < array.shape.size(); ++i) {
+                        src_idx += idx[i] * array.stride[i];
                     }
+
+                    idx[height_dim] = h + padding[0];
+                    idx[width_dim] = w + padding[2];
+                    size_t dst_idx = 0;
+                    for (size_t i = 0; i < paddedArray.shape.size(); ++i) {
+                        dst_idx += idx[i] * paddedArray.stride[i];
+                    }
+
+                    paddedArray.data[dst_idx] = array.data[src_idx];
                 }
             }
-        }
-        else {
-            throw std::runtime_error("addPadding only supports 2D and 3D arrays");
         }
 
         return paddedArray;
     }
 
-	template types::ArrayND<double> addPadding(const types::ArrayND<double>& array, const std::vector<int>& padding);
-	template types::ArrayND<int> addPadding(const types::ArrayND<int>& array, const std::vector<int>& padding);
-	template types::ArrayND<uint8_t> addPadding(const types::ArrayND<uint8_t>& array, const std::vector<int>& padding);
+    template types::ArrayND<double> addPadding(const types::ArrayND<double>& array, const std::vector<int>& padding);
+    template types::ArrayND<int> addPadding(const types::ArrayND<int>& array, const std::vector<int>& padding);
+    template types::ArrayND<uint8_t> addPadding(const types::ArrayND<uint8_t>& array, const std::vector<int>& padding);
 
     template <typename T>
     types::ArrayND<T> transpose(const types::ArrayND<T>& array, const std::vector<int>& perm) {
@@ -409,4 +464,18 @@ namespace utility {
 	template int getOffset(const types::ArrayND<int>& array, const std::vector<int>& indices);
 	template int getOffset(const types::ArrayND<double>& array, const std::vector<int>& indices);
 	template int getOffset(const types::ArrayND<uint8_t>& array, const std::vector<int>& indices);
+
+	template <typename T>
+	types::ArrayND<T> convertUint8ToType(const types::ArrayND<uint8_t>& array) {
+		types::ArrayND<T> convertedArray;
+		convertedArray.shape = array.shape;
+		convertedArray.stride = array.stride;
+		convertedArray.data.resize(array.data.size());
+		std::transform(array.data.begin(), array.data.end(), convertedArray.data.begin(), [](uint8_t val) { return static_cast<T>(val); });
+		return convertedArray;
+	}
+
+	template types::ArrayND<double> convertUint8ToType(const types::ArrayND<uint8_t>& array);
+	template types::ArrayND<int> convertUint8ToType(const types::ArrayND<uint8_t>& array);
+
 }
