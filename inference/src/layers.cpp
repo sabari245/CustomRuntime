@@ -166,9 +166,9 @@ namespace layers {
         return out;
     }
 
-	template types::ArrayND<int> Layers::Softmax<int>(const types::ArrayND<int>&);
+	// template types::ArrayND<int> Layers::Softmax<int>(const types::ArrayND<int>&);
 	template types::ArrayND<double> Layers::Softmax<double>(const types::ArrayND<double>&);
-	template types::ArrayND<uint8_t> Layers::Softmax<uint8_t>(const types::ArrayND<uint8_t>&);
+	// template types::ArrayND<uint8_t> Layers::Softmax<uint8_t>(const types::ArrayND<uint8_t>&);
 
     template <typename T>
     types::ArrayND<T> Layers::maxPool(

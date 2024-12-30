@@ -1,19 +1,14 @@
-﻿#include <fmt/format.h>
-#include <fmt/core.h>
-#include <stdexcept>
+﻿#include <stdexcept>
 #include <time.h>
 #include <numeric>
 #include <vector>
 #include <algorithm>
-
-#include <opencv2/opencv.hpp>
+#include <iostream>
 
 #include "dataset_reader.h"
 #include "model_reader.h"
 #include "layers.h"
 #include "types.h"
-
-using namespace fmt::literals;
 
 struct ModelMetrics {
     double avg_inference_time;
@@ -46,7 +41,7 @@ std::pair<types::ArrayND<double>, double> runInference(
             try {
                 padding = layerData.attributes.at(types::ATTR_PADS);
             }
-            catch (const std::exception& e) {
+            catch (const std::exception&) {
                 padding = { 0, 0, 0, 0 };
             }
             current_input = engine.conv2d(
@@ -117,7 +112,7 @@ std::pair<types::ArrayND<double>, double> runInference(
 
 // Function to get predicted class from output
 int getPredictedClass(const types::ArrayND<double>& output) {
-    return std::max_element(output.data.begin(), output.data.end()) - output.data.begin();
+    return static_cast<int>(std::max_element(output.data.begin(), output.data.end()) - output.data.begin());
 }
 
 ModelMetrics evaluateModel(const std::string& model_path, const std::string& sequence_path,
@@ -159,21 +154,18 @@ ModelMetrics evaluateModel(const std::string& model_path, const std::string& seq
 }
 
 int main() {
-    const std::string MODEL_PATH = "C:/Users/sabar/source/repos/sabari245/CustomRuntime/model_color_export/data.json";
-    const std::string SEQUENCE_PATH = "C:/Users/sabar/source/repos/sabari245/CustomRuntime/model_color_export/sequence.json";
+    const std::string MODEL_PATH = "C:/Users/sabar/source/repos/sabari245/CustomRuntime/model_color_new_export/data.json";
+    const std::string SEQUENCE_PATH = "C:/Users/sabar/source/repos/sabari245/CustomRuntime/model_color_new_export/sequence.json";
     const std::string DATASET_PATH = "C:/Users/sabar/source/repos/sabari245/CustomRuntime/dataset/test_batch.bin";
     const std::string META_PATH = "C:/Users/sabar/source/repos/sabari245/CustomRuntime/dataset/batches.meta.txt";
 
     try {
         ModelMetrics metrics = evaluateModel(MODEL_PATH, SEQUENCE_PATH, DATASET_PATH, META_PATH);
 
-        std::cout << fmt::format("Model Evaluation Results (100 samples):\n"
-            "Average Inference Time: {:.4f} seconds\n"
-            "Throughput: {:.2f} inferences per second\n"
-            "Accuracy: {:.2f}%\n",
-            metrics.avg_inference_time,
-            metrics.throughput,
-            metrics.accuracy * 100);
+        std::cout << "Model Evaluation Results (100 samples):\n"
+                  << "Average Inference Time: " << std::fixed << std::setprecision(4) << metrics.avg_inference_time << " seconds\n"
+                  << "Throughput: " << std::fixed << std::setprecision(2) << metrics.throughput << " inferences per second\n"
+                  << "Accuracy: " << std::fixed << std::setprecision(2) << metrics.accuracy * 100 << "%\n";
     }
     catch (const std::exception& e) {
         std::cerr << "Error during model evaluation: " << e.what() << std::endl;
