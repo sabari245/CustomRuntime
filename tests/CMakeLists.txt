@@ -12,12 +12,13 @@ FetchContent_Declare(
 set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(googletest)
 
+# Enable CTest
+include(CTest)
 enable_testing()
 include(GoogleTest)
 
 # Utility Test
 add_executable(UtilityTest "utility_test.cpp")
-
 
 target_link_libraries(UtilityTest PRIVATE 
     GTest::gtest_main
@@ -47,6 +48,10 @@ if(CMAKE_VERSION VERSION_GREATER 3.12)
     set_property(TARGET LayerTest PROPERTY CXX_STANDARD 20)
 endif()
 
-# Discover tests
+# Add tests to CTest
+add_test(NAME UtilityTest COMMAND UtilityTest)
+add_test(NAME LayerTest COMMAND LayerTest)
+
+# Discover tests with GTest
 gtest_discover_tests(UtilityTest)
 gtest_discover_tests(LayerTest)
