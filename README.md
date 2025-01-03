@@ -8,9 +8,9 @@ This project contains a custom runtime system built using C++. It implements a c
 * A C++ compiler (tested with GCC and MSVC)
 * External Libraries:
     * nlohmann/json ([https://github.com/nlohmann/json](https://github.com/nlohmann/json))
-    * fmtlib/fmt ([https://github.com/fmtlib/fmt](https://github.com/fmtlib/fmt))
     * Google Test ([https://github.com/google/googletest](https://github.com/google/googletest))
-    * OpenCV ([https://opencv.org/](https://opencv.org/))
+    * ~fmtlib/fmt ([https://github.com/fmtlib/fmt](https://github.com/fmtlib/fmt))~
+    * ~OpenCV ([https://opencv.org/](https://opencv.org/))~
 
 > **Note:** OpenCV need to be installed on your system. Make sure to set the path variables correctly if you are using Windows.
 
