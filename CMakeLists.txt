@@ -24,6 +24,7 @@ add_subdirectory("utils")
 add_subdirectory("reader")
 add_subdirectory("inference")
 add_subdirectory("tests")
+find_package(OpenMP REQUIRED)
 
 # Add source to this project's executable.
 add_executable (CustomRuntime "main.cpp")
@@ -32,6 +33,10 @@ target_link_libraries(CustomRuntime PRIVATE nlohmann_json::nlohmann_json)
 target_link_libraries(CustomRuntime PRIVATE utils)
 target_link_libraries(CustomRuntime PRIVATE reader)
 target_link_libraries(CustomRuntime PRIVATE inference)
+if(OpenMP_CXX_FOUND)
+    target_link_libraries(CustomRuntime PRIVATE OpenMP::OpenMP_CXX)
+endif()
+
 
 # Setting the C++ Standard globally for the project
 set(CMAKE_CXX_STANDARD 17)

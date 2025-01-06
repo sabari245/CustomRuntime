@@ -494,4 +494,38 @@ namespace layers
     template void Layers::Mul_Inplace<double>(types::ArrayND<double> &, const types::ArrayND<double> &);
     template void Layers::Mul_Inplace<uint8_t>(types::ArrayND<uint8_t> &, const types::ArrayND<uint8_t> &);
 
+    template <typename T>
+    void Layers::Mul_And_Add(
+        types::ArrayND<T> &in1,
+        const types::ArrayND<T> &in2,
+        const types::ArrayND<T> &in3)
+    {
+        // Calculate strides for faster access
+        const int in1Stride0 = in1.stride[0];
+        const int in1Stride1 = in1.stride[1];
+        const int in1Stride2 = in1.stride[2];
+        const int in1Stride3 = in1.stride[3];
+
+        // Handle broadcasting
+        for (int n = 0; n < in1.shape[0]; ++n)
+        {
+            for (int c = 0; c < in1.shape[1]; ++c)
+            { // channels - this contains the multiplication value on the second input
+                for (int h = 0; h < in1.shape[2]; ++h)
+                {
+                    for (int w = 0; w < in1.shape[3]; ++w)
+                    {
+                        int in1Idx = n * in1Stride0 + c * in1Stride1 + h * in1Stride2 + w * in1Stride3;
+                        in1.data[in1Idx] *= in2.data[c];
+                        in1.data[in1Idx] += in3.data[c];
+                    }
+                }
+            }
+        }
+    }
+
+    template void Layers::Mul_And_Add<double>(
+        types::ArrayND<double> &in1,
+        const types::ArrayND<double> &in2,
+        const types::ArrayND<double> &in3);
 }

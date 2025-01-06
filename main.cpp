@@ -96,15 +96,131 @@ std::pair<types::ArrayND<double>, double> runInference(
         }
 
         case types::LAYER_MUL:
-            // current_input = engine.Mul(
-            //     current_input,
-            //     layerData.weights.value());
             engine.Mul_Inplace(current_input, layerData.weights.value());
             break;
 
         case types::LAYER_SOFTMAX:
             current_input = engine.Softmax(current_input);
             break;
+
+        default:
+            throw std::runtime_error("Unknown layer type: " + std::to_string(layerData.type));
+        }
+    }
+
+    double inference_time = (double)(clock() - start) / CLOCKS_PER_SEC;
+    return {current_input, inference_time};
+}
+
+// trying to run inference on a single input and attempts to combine certain layers like Add Followed by Mul and try to do the reshape locally, relu locally and softmax locally
+std::pair<types::ArrayND<double>, double> runInferenceOptimized(
+    const types::ArrayND<double> &input,
+    layers::Layers &engine,
+    reader::ModelReader &modelReader)
+{
+    clock_t start = clock();
+    auto current_input = input;
+    bool skip_flag = false;
+
+    for (int i = 0; i < modelReader.getLayerCount(); i++)
+    {
+        auto layerData = modelReader.getLayerDataFromIndex(i);
+
+        if (skip_flag)
+        {
+            skip_flag = false;
+            continue;
+        }
+
+        switch (layerData.type)
+        {
+        case types::LAYER_TRANSPOSE:
+            current_input = engine.transpose(
+                current_input,
+                layerData.attributes.at(types::ATTR_PERM));
+            break;
+        case types::LAYER_CONV:
+        {
+            std::vector<int> padding;
+            try
+            {
+                padding = layerData.attributes.at(types::ATTR_PADS);
+            }
+            catch (const std::exception &)
+            {
+                padding = {0, 0, 0, 0};
+            }
+            current_input = engine.conv2d(
+                current_input,
+                layerData.weights.value(),
+                layerData.bias.value(),
+                padding,
+                layerData.attributes.at(types::ATTR_STRIDES),
+                layerData.attributes.at(types::ATTR_KERNEL_SHAPE));
+            break;
+        }
+        case types::LAYER_RELU:
+            std::transform(current_input.data.begin(), current_input.data.end(), current_input.data.begin(), [](double x)
+                           { return std::max(0.0, x); });
+            break;
+        case types::LAYER_MAXPOOL:
+            current_input = engine.maxPool(
+                current_input,
+                layerData.attributes.at(types::ATTR_KERNEL_SHAPE),
+                layerData.attributes.at(types::ATTR_STRIDES));
+            break;
+        case types::LAYER_RESHAPE:
+            current_input.shape.clear();
+            std::transform(layerData.weights.value().data.begin(), layerData.weights.value().data.end(), std::back_inserter(current_input.shape), [](double x)
+                           { return static_cast<int>(x); });
+            break;
+        case types::LAYER_MATMUL:
+            current_input = engine.MatMul(
+                current_input,
+                layerData.weights.value());
+            break;
+        case types::LAYER_ADD:
+        {
+            types::ArrayND<double> bias = layerData.weights.value();
+            if (bias.shape.size() == 1)
+            {
+                bias = utility::reshape(bias, {1, bias.shape[0]});
+            }
+            // current_input = engine.Add(current_input, bias);
+            engine.Add_Inplace(current_input, bias);
+            break;
+        }
+        case types::LAYER_MUL:
+        {
+            auto layerDataNext = modelReader.getLayerDataFromIndex(i + 1);
+            if (layerDataNext.type == types::LAYER_ADD)
+            {
+                engine.Mul_And_Add(current_input, layerData.weights.value(), layerDataNext.weights.value());
+            }
+            else
+            {
+                engine.Mul_Inplace(current_input, layerData.weights.value());
+            }
+            break;
+        }
+
+        case types::LAYER_SOFTMAX:
+        {
+            std::vector<double> exps;
+            double sum = 0;
+
+            for (auto val : current_input.data)
+            {
+                exps.push_back(std::exp(val));
+                sum += exps.back();
+            }
+
+            for (int i = 0; i < current_input.data.size(); i++)
+            {
+                current_input.data[i] = exps[i] / sum;
+            }
+            break;
+        }
 
         default:
             throw std::runtime_error("Unknown layer type: " + std::to_string(layerData.type));
@@ -143,7 +259,7 @@ ModelMetrics evaluateModel(const std::string &model_path, const std::string &seq
         input = utility::transpose(input, {0, 2, 3, 1});
 
         // Run inference
-        auto [output, inference_time] = runInference(input, engine, modelReader);
+        auto [output, inference_time] = runInferenceOptimized(input, engine, modelReader);
         inference_times.push_back(inference_time);
 
         // Check accuracy

@@ -5,12 +5,14 @@
 
 #include "types.h"
 
-namespace reader {
-	class DatasetReader {
+namespace reader
+{
+	class DatasetReader
+	{
 	private:
-		void readData(const std::string& dataPath);
-		void readLabels(const std::string& labelPath);
-		
+		void readData(const std::string &dataPath);
+		void readLabels(const std::string &labelPath);
+
 	public:
 		types::ArrayND<uint8_t> data;
 		std::vector<uint8_t> labels;
@@ -18,8 +20,7 @@ namespace reader {
 		std::vector<std::string> labelNames;
 
 		DatasetReader(
-			const std::string& dataPath,
-			const std::string& labelPath
-		);
+			const std::string &dataPath,
+			const std::string &labelPath);
 	};
 }

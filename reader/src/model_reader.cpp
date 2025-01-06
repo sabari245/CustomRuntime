@@ -2,8 +2,10 @@
 #include <fstream>
 #include <iostream>
 
-namespace reader {
-	ModelReader::ModelReader(const std::string& modelDatafile, const std::string& modelSequenceFile) {
+namespace reader
+{
+	ModelReader::ModelReader(const std::string &modelDatafile, const std::string &modelSequenceFile)
+	{
 		auto modelDataJson = this->getDataFromFile(modelDatafile);
 		auto modelSequenceJson = this->getDataFromFile(modelSequenceFile);
 
@@ -18,10 +20,12 @@ namespace reader {
 		std::cout << "[INFO] Successfully parsed the model sequence" << std::endl;
 	}
 
-	nlohmann::ordered_json ModelReader::getDataFromFile(const std::string& filename) {
+	nlohmann::ordered_json ModelReader::getDataFromFile(const std::string &filename)
+	{
 		std::ifstream file(filename);
 
-		if (!file.is_open()) {
+		if (!file.is_open())
+		{
 			throw std::runtime_error("Could not open file: " + filename);
 		}
 
@@ -33,8 +37,10 @@ namespace reader {
 		return data;
 	}
 
-	void ModelReader::parseDataFile(const nlohmann::ordered_json& modelData) {
-		for (const auto& model : modelData) {
+	void ModelReader::parseDataFile(const nlohmann::ordered_json &modelData)
+	{
+		for (const auto &model : modelData)
+		{
 			types::ArrayND<double> array;
 			array.data = model["data"].get<std::vector<double>>();
 			array.shape = model["shape"].get<std::vector<int>>();
@@ -43,39 +49,52 @@ namespace reader {
 		}
 	}
 
-	void ModelReader::parseSequenceFile(const nlohmann::ordered_json& modelSequence) {
-		for (const auto& layer : modelSequence) {
+	void ModelReader::parseSequenceFile(const nlohmann::ordered_json &modelSequence)
+	{
+		for (const auto &layer : modelSequence)
+		{
 			types::LayerData layerData;
 
-			if (types::StringToLayerType.contains(layer["operation"])) {
+			if (types::StringToLayerType.contains(layer["operation"]))
+			{
 				layerData.type = types::StringToLayerType.at(layer["operation"]);
 			}
-			else {
+			else
+			{
 				throw std::runtime_error("Invalid layer type: " + layer["operation"].get<std::string>());
 			}
 
-			if (layer["inputs"].size() > 1) {
+			if (layer["inputs"].size() > 1)
+			{
 				layerData.weights = this->nameModelDataMap[layer["inputs"][1]];
 			}
 
-			if (layer["inputs"].size() > 2) {
+			if (layer["inputs"].size() > 2)
+			{
 				layerData.bias = this->nameModelDataMap[layer["inputs"][2]];
 			}
 
-			if (layer.contains("attributes")) {
-				for (const auto& [key, value] : layer["attributes"].items()) {
-					if (types::StringToAttributeType.contains(key)) {
-						if (value.is_array()) {
+			if (layer.contains("attributes"))
+			{
+				for (const auto &[key, value] : layer["attributes"].items())
+				{
+					if (types::StringToAttributeType.contains(key))
+					{
+						if (value.is_array())
+						{
 							layerData.attributes[types::StringToAttributeType.at(key)] = value.get<std::vector<int>>();
 						}
-						else if (value.is_number_integer()) {
-							layerData.attributes[types::StringToAttributeType.at(key)] = { value.get<int>() };
+						else if (value.is_number_integer())
+						{
+							layerData.attributes[types::StringToAttributeType.at(key)] = {value.get<int>()};
 						}
-						else {
+						else
+						{
 							throw std::runtime_error("Invalid value type for attribute: " + key);
 						}
 					}
-					else {
+					else
+					{
 						throw std::runtime_error("Invalid attribute type: " + key);
 					}
 				}
@@ -85,22 +104,36 @@ namespace reader {
 		}
 	}
 
-	std::vector<int> ModelReader::getStrideFromShape(const std::vector<int>& shape) {
+	std::vector<int> ModelReader::getStrideFromShape(const std::vector<int> &shape)
+	{
 		std::vector<int> stride(shape.size(), 1);
-		for (int i = shape.size() - 2; i >= 0; i--) {
+		for (int i = shape.size() - 2; i >= 0; i--)
+		{
 			stride[i] = shape[i + 1] * stride[i + 1];
 		}
 		return stride;
 	}
 
-	types::LayerData ModelReader::getLayerDataFromIndex(int index) {
-		if (index >= this->layerDataList.size()) {
+	types::LayerData ModelReader::getLayerDataFromIndex(int index)
+	{
+		if (index >= this->layerDataList.size())
+		{
 			throw std::runtime_error("Index out of bounds");
 		}
 		return this->layerDataList[index];
 	}
 
-	int ModelReader::getLayerCount() {
+	types::LayerData &ModelReader::getLayerDataRefFromIndex(int index)
+	{
+		if (index >= this->layerDataList.size())
+		{
+			throw std::runtime_error("Index out of bounds");
+		}
+		return this->layerDataList[index];
+	}
+
+	int ModelReader::getLayerCount()
+	{
 		return this->layerDataList.size();
 	}
 }
