@@ -72,10 +72,18 @@ std::pair<types::ArrayND<double>, double> runInference(
             break;
 
         case types::LAYER_RESHAPE:
-            current_input = engine.Reshape(
-                current_input,
-                layerData.weights.value());
+        {
+
+            std::vector<int> intShape;
+            for (const auto& val : layerData.weights.value().data)
+            {
+                intShape.push_back(static_cast<int>(val));
+            }
+
+            // Call the reshape utility function with the converted shape
+            utility::reshape_inplace(current_input, intShape);
             break;
+        }
 
         case types::LAYER_MATMUL:
             current_input = engine.MatMul(
@@ -170,9 +178,7 @@ std::pair<types::ArrayND<double>, double> runInferenceOptimized(
                 layerData.attributes.at(types::ATTR_STRIDES));
             break;
         case types::LAYER_RESHAPE:
-            current_input.shape.clear();
-            std::transform(layerData.weights.value().data.begin(), layerData.weights.value().data.end(), std::back_inserter(current_input.shape), [](double x)
-                           { return static_cast<int>(x); });
+            
             break;
         case types::LAYER_MATMUL:
             current_input = engine.MatMul(
