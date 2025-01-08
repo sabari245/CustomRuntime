@@ -4,15 +4,11 @@ This project contains a custom runtime system built using C++. It implements a c
 
 ### Prerequisites
 
-* CMake (version 3.8 or later): [https://cmake.org/](https://cmake.org/)
+* CMake (version 3.11 or later): [https://cmake.org/](https://cmake.org/)
 * A C++ compiler (tested with GCC and MSVC)
 * External Libraries:
     * nlohmann/json ([https://github.com/nlohmann/json](https://github.com/nlohmann/json))
     * Google Test ([https://github.com/google/googletest](https://github.com/google/googletest))
-    * ~fmtlib/fmt ([https://github.com/fmtlib/fmt](https://github.com/fmtlib/fmt))~
-    * ~OpenCV ([https://opencv.org/](https://opencv.org/))~
-
-> **Note:** OpenCV need to be installed on your system. Make sure to set the path variables correctly if you are using Windows.
 
 ### Building the Project
 
