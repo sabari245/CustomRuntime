@@ -368,8 +368,8 @@ namespace layers
                 // process each channel
                 for (int c = 0; c < in_channels; c++)
                 {
-                    auto input_channel = utility::sliceND(paddedData, {b, c, 0, 0}, {b + 1, c + 1, in_height, in_width});
-                    utility::reshape_inplace(input_channel, {in_height, in_width});
+                    auto input_channel = utility::sliceND(paddedData, {b, c, 0, 0}, {b + 1, c + 1, paddedData.shape[2], paddedData.shape[3]});
+                    utility::reshape_inplace(input_channel, {paddedData.shape[2], paddedData.shape[3]});
 
                     auto filter = utility::sliceND(weights, {k, c, 0, 0}, {k + 1, c + 1, kernel_shape[0], kernel_shape[1]});
                     utility::reshape_inplace(filter, {kernel_shape[0], kernel_shape[1]});

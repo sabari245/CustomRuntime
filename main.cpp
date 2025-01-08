@@ -355,7 +355,7 @@ int main()
 
     layers::Layers engine;
 
-    auto result = engine.conv2dFFT(in, kernel, bias, {1, 1, 1, 1}, {1, 1}, {2, 2});
+    auto result = engine.conv2dFFT(in, kernel, bias, {0, 0, 0, 0}, {1, 1}, {2, 2});
 
     std::vector<int> expected = {
         30, 34,
