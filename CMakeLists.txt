@@ -1,7 +1,7 @@
 ﻿# CMakeList.txt : CMake project for CustomRuntime, include source and define
 # project specific logic here.
 #
-cmake_minimum_required (VERSION 3.8)
+cmake_minimum_required (VERSION 3.11)
 
 # Enable Hot Reload for MSVC compilers if supported.
 if (POLICY CMP0141)
@@ -15,8 +15,8 @@ include(FetchContent)
 
 FetchContent_Declare(
   json 
-  URL https://github.com/nlohmann/json/releases/download/v3.11.3/json.tar.xz
   DOWNLOAD_EXTRACT_TIMESTAMP TRUE
+  URL https://github.com/nlohmann/json/releases/download/v3.11.3/json.tar.xz
 )
 FetchContent_MakeAvailable(json)
 
