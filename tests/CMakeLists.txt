@@ -32,6 +32,7 @@ target_link_libraries(LayerTest PRIVATE
     GTest::gtest_main
     utils
     inference
+    fftw3
 )
 
 # Set C++ Standard for test targets

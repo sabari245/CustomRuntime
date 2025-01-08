@@ -20,11 +20,14 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(json)
 
+
 add_subdirectory("utils")
 add_subdirectory("reader")
 add_subdirectory("inference")
 add_subdirectory("tests")
+add_subdirectory("fftw-3.3.10")
 find_package(OpenMP REQUIRED)
+
 
 # Add source to this project's executable.
 add_executable (CustomRuntime "main.cpp")
@@ -33,6 +36,7 @@ target_link_libraries(CustomRuntime PRIVATE nlohmann_json::nlohmann_json)
 target_link_libraries(CustomRuntime PRIVATE utils)
 target_link_libraries(CustomRuntime PRIVATE reader)
 target_link_libraries(CustomRuntime PRIVATE inference)
+target_link_libraries(CustomRuntime PRIVATE fftw3)
 if(OpenMP_CXX_FOUND)
     target_link_libraries(CustomRuntime PRIVATE OpenMP::OpenMP_CXX)
 endif()

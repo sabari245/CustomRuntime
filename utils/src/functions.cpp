@@ -126,11 +126,10 @@ namespace utility
         {
             totalElements *= slicedArray.shape[dim];
         }
-        slicedArray.data.reserve(totalElements);
 
         // Helper function to recursively iterate through dimensions
-        std::function<void(size_t, size_t)> copySlice =
-            [&](size_t dimIndex, size_t flatIndex)
+        std::function<void(size_t, size_t, size_t)> copySlice =
+            [&](size_t dimIndex, size_t srcIndex, size_t dstIndex)
         {
             if (dimIndex == start.size())
             {
@@ -141,22 +140,28 @@ namespace utility
                     blockSize *= array.shape[i];
                 }
                 std::copy(
-                    array.data.begin() + flatIndex,
-                    array.data.begin() + flatIndex + blockSize,
-                    std::back_inserter(slicedArray.data));
+                    array.data.begin() + srcIndex,
+                    array.data.begin() + srcIndex + blockSize,
+                    slicedArray.data.begin() + dstIndex);
                 return;
             }
 
             // Iterate through current dimension
-            size_t stride = array.stride[dimIndex];
-            for (int i = start[dimIndex]; i < end[dimIndex]; i++)
+            size_t srcStride = array.stride[dimIndex];
+            size_t dstStride = slicedArray.stride[dimIndex];
+            for (int i = start[dimIndex], j = 0; i < end[dimIndex]; i++, j++)
             {
-                copySlice(dimIndex + 1, flatIndex + i * stride);
+                copySlice(dimIndex + 1,
+                          srcIndex + i * srcStride,
+                          dstIndex + j * dstStride);
             }
         };
 
+        // Preallocate the data vector instead of using back_inserter
+        slicedArray.data.resize(totalElements);
+
         // Start recursive copy from first dimension
-        copySlice(0, 0);
+        copySlice(0, 0, 0);
 
         return slicedArray;
     }

@@ -300,26 +300,70 @@ ModelMetrics evaluateModel(const std::string &model_path, const std::string &seq
     return {avg_inference_time, throughput, accuracy};
 }
 
+// int main()
+// {
+//     const std::string MODEL_PATH = "/home/sabari/code/CustomRuntime/model_color_new_export/data.json";
+//     const std::string SEQUENCE_PATH = "/home/sabari/code/CustomRuntime/model_color_new_export/sequence.json";
+//     const std::string DATASET_PATH = "/home/sabari/code/CustomRuntime/dataset/test_batch.bin";
+//     const std::string META_PATH = "/home/sabari/code/CustomRuntime/dataset/batches.meta.txt";
+
+//     try
+//     {
+//         ModelMetrics metrics = evaluateModel(MODEL_PATH, SEQUENCE_PATH, DATASET_PATH, META_PATH);
+
+//         std::cout << "Model Evaluation Results (100 samples):\n"
+//                   << "Average Inference Time: " << std::fixed << std::setprecision(4) << metrics.avg_inference_time << " seconds\n"
+//                   << "Throughput: " << std::fixed << std::setprecision(2) << metrics.throughput << " inferences per second\n"
+//                   << "Accuracy: " << std::fixed << std::setprecision(2) << metrics.accuracy * 100 << "%\n";
+//     }
+//     catch (const std::exception &e)
+//     {
+//         std::cerr << "Error during model evaluation: " << e.what() << std::endl;
+//         return -1;
+//     }
+
+//     return 0;
+// }
+
 int main()
 {
-    const std::string MODEL_PATH = "/home/sabari/code/CustomRuntime/model_color_new_export/data.json";
-    const std::string SEQUENCE_PATH = "/home/sabari/code/CustomRuntime/model_color_new_export/sequence.json";
-    const std::string DATASET_PATH = "/home/sabari/code/CustomRuntime/dataset/test_batch.bin";
-    const std::string META_PATH = "/home/sabari/code/CustomRuntime/dataset/batches.meta.txt";
 
-    try
-    {
-        ModelMetrics metrics = evaluateModel(MODEL_PATH, SEQUENCE_PATH, DATASET_PATH, META_PATH);
+    types::ArrayND<int> in;
+    in.shape = {1, 2, 3, 3};
+    in.data = {
+        1, 2, 3,
+        4, 5, 6,
+        7, 8, 9,
+        10, 11, 12,
+        13, 14, 15,
+        16, 17, 18};
+    in.stride = utility::getStrideFromShape(in.shape);
 
-        std::cout << "Model Evaluation Results (100 samples):\n"
-                  << "Average Inference Time: " << std::fixed << std::setprecision(4) << metrics.avg_inference_time << " seconds\n"
-                  << "Throughput: " << std::fixed << std::setprecision(2) << metrics.throughput << " inferences per second\n"
-                  << "Accuracy: " << std::fixed << std::setprecision(2) << metrics.accuracy * 100 << "%\n";
-    }
-    catch (const std::exception &e)
+    types::ArrayND<int> kernel;
+    kernel.shape = {1, 2, 2, 2};
+    kernel.data = {
+        1, 0,
+        0, 1,
+        0, 1,
+        1, 0};
+    kernel.stride = utility::getStrideFromShape(kernel.shape);
+
+    types::ArrayND<int> bias;
+    bias.shape = {2};
+    bias.data = {1, 1};
+    bias.stride = utility::getStrideFromShape(bias.shape);
+
+    layers::Layers engine;
+
+    auto result = engine.conv2dFFT(in, kernel, bias, {1, 1, 1, 1}, {1, 1}, {2, 2});
+
+    std::vector<int> expected = {
+        30, 34,
+        42, 46};
+
+    for (int i = 0; i < result.data.size(); i++)
     {
-        std::cerr << "Error during model evaluation: " << e.what() << std::endl;
-        return -1;
+        std::cout << result.data[i] << " " << expected[i] + 1 << "\n";
     }
 
     return 0;

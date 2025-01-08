@@ -4,11 +4,178 @@
 #include <cmath>
 #include <cassert>
 #include <algorithm>
+#include <iostream>
 
+#include "fftw3.h"
 #include "layers.h"
 
 namespace layers
 {
+
+    template <typename T>
+    void Layers::fft2d(
+        const types::ArrayND<T> &in,
+        types::ArrayND<std::complex<T>> &out)
+    {
+        if (in.shape.size() != 2)
+        {
+            throw std::invalid_argument("Input array must be 2D");
+        }
+
+        fftw_complex *in_fft = (fftw_complex *)fftw_malloc(sizeof(fftw_complex) * in.shape[0] * in.shape[1]);
+        fftw_complex *out_fft = (fftw_complex *)fftw_malloc(sizeof(fftw_complex) * in.shape[0] * in.shape[1]);
+
+        fftw_plan plan = fftw_plan_dft_2d(in.shape[0], in.shape[1], in_fft, out_fft, FFTW_FORWARD, FFTW_ESTIMATE);
+
+        for (int i = 0; i < in.shape[0] * in.shape[1]; i++)
+        {
+            in_fft[i][0] = in.data[i];
+            in_fft[i][1] = 0;
+        }
+
+        fftw_execute(plan);
+
+        for (int i = 0; i < in.shape[0] * in.shape[1]; i++)
+        {
+            out.data[i] = std::complex<T>(out_fft[i][0], out_fft[i][1]);
+        }
+
+        fftw_destroy_plan(plan);
+        fftw_free(in_fft);
+        fftw_free(out_fft);
+    }
+
+    template void Layers::fft2d<double>(
+        const types::ArrayND<double> &,
+        types::ArrayND<std::complex<double>> &);
+
+    template void Layers::fft2d<int>(
+        const types::ArrayND<int> &,
+        types::ArrayND<std::complex<int>> &);
+
+    template <typename T>
+    void Layers::ifft2d(
+        const types::ArrayND<std::complex<T>> &in,
+        types::ArrayND<T> &out)
+    {
+        if (in.shape.size() != 2)
+        {
+            throw std::invalid_argument("Input array must be 2D");
+        }
+
+        fftw_complex *in_fft = (fftw_complex *)fftw_malloc(sizeof(fftw_complex) * in.shape[0] * in.shape[1]);
+        fftw_complex *out_fft = (fftw_complex *)fftw_malloc(sizeof(fftw_complex) * in.shape[0] * in.shape[1]);
+        fftw_plan plan = fftw_plan_dft_2d(in.shape[0], in.shape[1], in_fft, out_fft, FFTW_BACKWARD, FFTW_ESTIMATE);
+
+        for (int i = 0; i < in.shape[0] * in.shape[1]; i++)
+        {
+            in_fft[i][0] = in.data[i].real();
+            in_fft[i][1] = in.data[i].imag();
+        }
+
+        fftw_execute(plan);
+
+        for (int i = 0; i < in.shape[0] * in.shape[1]; i++)
+        {
+            out.data[i] = out_fft[i][0] / (in.shape[0] * in.shape[1]);
+        }
+
+        fftw_destroy_plan(plan);
+        fftw_free(in_fft);
+        fftw_free(out_fft);
+    }
+
+    template void Layers::ifft2d<double>(
+        const types::ArrayND<std::complex<double>> &,
+        types::ArrayND<double> &);
+
+    template void Layers::ifft2d<int>(
+        const types::ArrayND<std::complex<int>> &,
+        types::ArrayND<int> &);
+
+    template <typename T>
+    types::ArrayND<T> Layers::convolveFFT(
+        const types::ArrayND<T> &image,
+        const types::ArrayND<T> &filter)
+    {
+        if (image.shape.size() != 2 || filter.shape.size() != 2)
+        {
+            throw std::invalid_argument("Input arrays must be 2D");
+        }
+        int imageHeight = image.shape[0];
+        int imageWidth = image.shape[1];
+        int filterHeight = filter.shape[0];
+        int filterWidth = filter.shape[1];
+
+        // padding the kernel
+        types::ArrayND<T> paddedFilter = utility::createZeros<T>({imageHeight, imageWidth});
+        for (int i = 0; i < filterHeight; i++)
+        {
+            for (int j = 0; j < filterWidth; j++)
+            {
+                paddedFilter.data[i * imageWidth + j] = filter.data[i * filterWidth + j];
+            }
+        }
+
+        // FFT the image and the kernel
+        types::ArrayND<std::complex<T>> fftImage, fftFilter;
+        fftImage.data.resize(image.data.size());
+        fftFilter.data.resize(image.data.size());
+        fftImage.shape = image.shape;
+        fftFilter.shape = image.shape;
+        fftImage.stride = image.stride;
+        fftFilter.stride = image.stride; // All the size, shape and strides are the same
+        fft2d(image, fftImage);
+        fft2d(paddedFilter, fftFilter);
+
+        // Multiply the FFTs
+        types::ArrayND<std::complex<T>> fftResult;
+        fftResult.shape = image.shape;
+        fftResult.stride = image.stride;
+        fftResult.data.resize(image.data.size());
+
+        for (int i = 0; i < image.data.size(); i++)
+        {
+            fftResult.data[i] = fftImage.data[i] * fftFilter.data[i];
+        }
+
+        // IFFT the result
+        types::ArrayND<T> result;
+        result.shape = image.shape;
+        result.stride = image.stride;
+        result.data.resize(image.data.size());
+
+        ifft2d(fftResult, result);
+
+        std::cout << "result: " << std::endl;
+        std::cout << result << std::endl;
+
+        int validRows = imageHeight - filterHeight + 1;
+        int validCols = imageWidth - filterWidth + 1;
+        types::ArrayND<T> validResult = utility::createZeros<T>({validRows, validCols});
+
+        // the result is stored in the bottom right corner of the result array (due to the circular convolution)
+        int incrementRows = imageHeight - validRows;
+        int incrementCols = imageWidth - validCols;
+
+        for (int i = 0; i < validRows; i++)
+        {
+            for (int j = 0; j < validCols; j++)
+            {
+                validResult.data[i * validCols + j] = result.data[(i + incrementRows) * imageWidth + j + incrementCols];
+            }
+        }
+
+        return validResult;
+    }
+
+    template types::ArrayND<double> Layers::convolveFFT<double>(
+        const types::ArrayND<double> &,
+        const types::ArrayND<double> &);
+
+    template types::ArrayND<int> Layers::convolveFFT<int>(
+        const types::ArrayND<int> &,
+        const types::ArrayND<int> &);
 
     template <typename T>
     types::ArrayND<T> Layers::transpose(
@@ -131,6 +298,124 @@ namespace layers
         const types::ArrayND<uint8_t> &,
         const types::ArrayND<uint8_t> &,
         const types::ArrayND<uint8_t> &,
+        const std::vector<int> &,
+        const std::vector<int> &,
+        const std::vector<int> &);
+
+    template <typename T>
+    types::ArrayND<T> Layers::conv2dFFT(
+        const types::ArrayND<T> &in,
+        const types::ArrayND<T> &weights,
+        const types::ArrayND<T> &bias,
+        const std::vector<int> &padding, // [top, right, bottom, left]
+        const std::vector<int> &stride,
+        const std::vector<int> &kernel_shape)
+    {
+        // Get dimensions
+        const int batch_size = in.shape[0];
+        const int in_channels = in.shape[1];
+        const int in_height = in.shape[2];
+        const int in_width = in.shape[3];
+
+        const int num_kernels = weights.shape[0];
+
+        types::ArrayND<T> paddedData;
+        if (padding[0] > 0 || padding[1] > 0 || padding[2] > 0 || padding[3] > 0)
+        {
+            paddedData = utility::addPadding(in, padding);
+        }
+        else
+        {
+            paddedData = in;
+        }
+
+        const int out_height = (in_height + padding[0] + padding[2] - kernel_shape[0]) / stride[0] + 1;
+        const int out_width = (in_width + padding[1] + padding[3] - kernel_shape[1]) / stride[1] + 1;
+
+        std::vector<int> out_shape = {batch_size, num_kernels, out_height, out_width};
+        types::ArrayND<T> output = utility::createZeros<T>(out_shape);
+
+        const int padded_stride_b = paddedData.stride[0];
+        const int padded_stride_c = paddedData.stride[1];
+        const int padded_stride_h = paddedData.stride[2];
+        const int padded_stride_w = paddedData.stride[3];
+
+        const int weight_stride_k = weights.stride[0];
+        const int weight_stride_c = weights.stride[1];
+        const int weight_stride_h = weights.stride[2];
+        const int weight_stride_w = weights.stride[3];
+
+        const int out_stride_b = output.stride[0];
+        const int out_stride_k = output.stride[1];
+        const int out_stride_h = output.stride[2];
+        const int out_stride_w = output.stride[3];
+
+        // Process each input batch
+        for (int b = 0; b < batch_size; b++)
+        {
+            // Process each kernel
+            for (int k = 0; k < num_kernels; k++)
+            {
+                // Zero the output positions before accumulating
+                for (int i = 0; i < out_height; i++)
+                {
+                    for (int j = 0; j < out_width; j++)
+                    {
+                        output.data[b * out_stride_b + k * out_stride_k + i * out_stride_h + j * out_stride_w] = 0;
+                    }
+                }
+
+                // process each channel
+                for (int c = 0; c < in_channels; c++)
+                {
+                    auto input_channel = utility::sliceND(paddedData, {b, c, 0, 0}, {b + 1, c + 1, in_height, in_width});
+                    utility::reshape_inplace(input_channel, {in_height, in_width});
+
+                    auto filter = utility::sliceND(weights, {k, c, 0, 0}, {k + 1, c + 1, kernel_shape[0], kernel_shape[1]});
+                    utility::reshape_inplace(filter, {kernel_shape[0], kernel_shape[1]});
+
+                    auto conv_result = convolveFFT(input_channel, filter);
+
+                    std::cout << conv_result << std::endl;
+
+                    // Apply stride when accumulating results
+                    for (int i = 0; i < out_height; i++)
+                    {
+                        for (int j = 0; j < out_width; j++)
+                        {
+                            int src_i = i * stride[0];
+                            int src_j = j * stride[1];
+                            output.data[b * out_stride_b + k * out_stride_k + i * out_stride_h + j * out_stride_w] += conv_result.data[src_i * conv_result.shape[1] + src_j];
+                        }
+                    }
+                }
+
+                // Add bias after accumulating all channels
+                for (int i = 0; i < out_height; i++)
+                {
+                    for (int j = 0; j < out_width; j++)
+                    {
+                        output.data[b * out_stride_b + k * out_stride_k + i * out_stride_h + j * out_stride_w] += bias.data[k];
+                    }
+                }
+            }
+        }
+
+        return output;
+    }
+
+    template types::ArrayND<int> Layers::conv2dFFT<int>(
+        const types::ArrayND<int> &,
+        const types::ArrayND<int> &,
+        const types::ArrayND<int> &,
+        const std::vector<int> &,
+        const std::vector<int> &,
+        const std::vector<int> &);
+
+    template types::ArrayND<double> Layers::conv2dFFT<double>(
+        const types::ArrayND<double> &,
+        const types::ArrayND<double> &,
+        const types::ArrayND<double> &,
         const std::vector<int> &,
         const std::vector<int> &,
         const std::vector<int> &);
