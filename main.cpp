@@ -75,7 +75,7 @@ std::pair<types::ArrayND<double>, double> runInference(
         {
 
             std::vector<int> intShape;
-            for (const auto& val : layerData.weights.value().data)
+            for (const auto &val : layerData.weights.value().data)
             {
                 intShape.push_back(static_cast<int>(val));
             }
@@ -178,8 +178,17 @@ std::pair<types::ArrayND<double>, double> runInferenceOptimized(
                 layerData.attributes.at(types::ATTR_STRIDES));
             break;
         case types::LAYER_RESHAPE:
-            
+        {
+            std::vector<int> intShape;
+            for (const auto &val : layerData.weights.value().data)
+            {
+                intShape.push_back(static_cast<int>(val));
+            }
+
+            // Call the reshape utility function with the converted shape
+            utility::reshape_inplace(current_input, intShape);
             break;
+        }
         case types::LAYER_MATMUL:
             current_input = engine.MatMul(
                 current_input,
@@ -202,6 +211,7 @@ std::pair<types::ArrayND<double>, double> runInferenceOptimized(
             if (layerDataNext.type == types::LAYER_ADD)
             {
                 engine.Mul_And_Add(current_input, layerData.weights.value(), layerDataNext.weights.value());
+                skip_flag = true; // Add this line to skip the next ADD operation
             }
             else
             {
@@ -212,13 +222,18 @@ std::pair<types::ArrayND<double>, double> runInferenceOptimized(
 
         case types::LAYER_SOFTMAX:
         {
+            // Find max value for numerical stability
+            double max_val = *std::max_element(current_input.data.begin(), current_input.data.end());
+
             std::vector<double> exps;
             double sum = 0;
 
+            // Subtract max_val for numerical stability
             for (auto val : current_input.data)
             {
-                exps.push_back(std::exp(val));
-                sum += exps.back();
+                double stable_exp = std::exp(val - max_val);
+                exps.push_back(stable_exp);
+                sum += stable_exp;
             }
 
             for (int i = 0; i < current_input.data.size(); i++)
@@ -266,6 +281,7 @@ ModelMetrics evaluateModel(const std::string &model_path, const std::string &seq
 
         // Run inference
         auto [output, inference_time] = runInferenceOptimized(input, engine, modelReader);
+        // auto [output, inference_time] = runInference(input, engine, modelReader);
         inference_times.push_back(inference_time);
 
         // Check accuracy
@@ -286,10 +302,10 @@ ModelMetrics evaluateModel(const std::string &model_path, const std::string &seq
 
 int main()
 {
-    const std::string MODEL_PATH = "C:/Users/sabar/source/repos/sabari245/CustomRuntime/model_color_new_export/data.json";
-    const std::string SEQUENCE_PATH = "C:/Users/sabar/source/repos/sabari245/CustomRuntime/model_color_new_export/sequence.json";
-    const std::string DATASET_PATH = "C:/Users/sabar/source/repos/sabari245/CustomRuntime/dataset/test_batch.bin";
-    const std::string META_PATH = "C:/Users/sabar/source/repos/sabari245/CustomRuntime/dataset/batches.meta.txt";
+    const std::string MODEL_PATH = "/home/sabari/code/CustomRuntime/model_color_new_export/data.json";
+    const std::string SEQUENCE_PATH = "/home/sabari/code/CustomRuntime/model_color_new_export/sequence.json";
+    const std::string DATASET_PATH = "/home/sabari/code/CustomRuntime/dataset/test_batch.bin";
+    const std::string META_PATH = "/home/sabari/code/CustomRuntime/dataset/batches.meta.txt";
 
     try
     {
