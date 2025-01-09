@@ -9,15 +9,15 @@ namespace layers
 {
 	class Layers
 	{
-	private:
+	public:
 		template <typename T>
 		void fft2d(
 			const types::ArrayND<T> &in,
-			types::ArrayND<std::complex<T>> &out);
+			types::ArrayND<std::complex<double>> &out);
 
 		template <typename T>
 		void ifft2d(
-			const types::ArrayND<std::complex<T>> &in,
+			const types::ArrayND<std::complex<double>> &in,
 			types::ArrayND<T> &out);
 
 		template <typename T>
@@ -25,7 +25,6 @@ namespace layers
 			const types::ArrayND<T> &image,
 			const types::ArrayND<T> &filter);
 
-	public:
 		template <typename T>
 		types::ArrayND<T> transpose(
 			const types::ArrayND<T> &in,

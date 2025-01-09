@@ -85,6 +85,63 @@ TEST(ConvolutionLayer, Test1)
 	}
 }
 
+TEST(FFTOperation, Test1)
+{
+	types::ArrayND<int> in;
+	in.shape = {4, 4};
+	in.data = {
+		0, 1, 2, 3,
+		4, 5, 6, 7,
+		8, 9, 10, 11,
+		12, 13, 14, 15};
+	in.stride = utility::getStrideFromShape(in.shape);
+
+	types::ArrayND<int> kernel;
+	kernel.shape = {2, 2};
+	kernel.data = {
+		1, 0,
+		0, 1};
+	kernel.stride = utility::getStrideFromShape(kernel.shape);
+
+	layers::Layers engine;
+
+	auto result = engine.convolveFFT(in, kernel);
+
+	std::vector<int> expected = {5, 7, 9, 13, 15, 17, 21, 23, 25};
+	for (int i = 0; i < expected.size(); i++)
+	{
+		EXPECT_EQ(result.data[i], expected[i]);
+	}
+}
+
+TEST(FFTOperation, Test2)
+{
+	types::ArrayND<int> in;
+	in.shape = {3, 3};
+	in.data = {
+		1, 2, 3,
+		4, 5, 6,
+		7, 8, 9};
+	in.stride = utility::getStrideFromShape(in.shape);
+
+	types::ArrayND<int> kernel;
+	kernel.shape = {2, 2};
+	kernel.data = {
+		1, 0,
+		0, 1};
+	kernel.stride = utility::getStrideFromShape(kernel.shape);
+
+	layers::Layers engine;
+
+	auto result = engine.convolveFFT(in, kernel);
+
+	std::vector<int> expected = {6, 8, 12, 14};
+	for (int i = 0; i < expected.size(); i++)
+	{
+		EXPECT_EQ(result.data[i], expected[i]);
+	}
+}
+
 TEST(ConvolutionLayer, Test2)
 {
 	types::ArrayND<int> in;

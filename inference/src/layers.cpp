@@ -15,7 +15,7 @@ namespace layers
     template <typename T>
     void Layers::fft2d(
         const types::ArrayND<T> &in,
-        types::ArrayND<std::complex<T>> &out)
+        types::ArrayND<std::complex<double>> &out)
     {
         if (in.shape.size() != 2)
         {
@@ -37,7 +37,7 @@ namespace layers
 
         for (int i = 0; i < in.shape[0] * in.shape[1]; i++)
         {
-            out.data[i] = std::complex<T>(out_fft[i][0], out_fft[i][1]);
+            out.data[i] = std::complex<double>(out_fft[i][0], out_fft[i][1]);
         }
 
         fftw_destroy_plan(plan);
@@ -45,17 +45,12 @@ namespace layers
         fftw_free(out_fft);
     }
 
-    template void Layers::fft2d<double>(
-        const types::ArrayND<double> &,
-        types::ArrayND<std::complex<double>> &);
-
-    template void Layers::fft2d<int>(
-        const types::ArrayND<int> &,
-        types::ArrayND<std::complex<int>> &);
+    template void Layers::fft2d(const types::ArrayND<double> &, types::ArrayND<std::complex<double>> &);
+    template void Layers::fft2d(const types::ArrayND<int> &, types::ArrayND<std::complex<double>> &);
 
     template <typename T>
     void Layers::ifft2d(
-        const types::ArrayND<std::complex<T>> &in,
+        const types::ArrayND<std::complex<double>> &in,
         types::ArrayND<T> &out)
     {
         if (in.shape.size() != 2)
@@ -85,13 +80,8 @@ namespace layers
         fftw_free(out_fft);
     }
 
-    template void Layers::ifft2d<double>(
-        const types::ArrayND<std::complex<double>> &,
-        types::ArrayND<double> &);
-
-    template void Layers::ifft2d<int>(
-        const types::ArrayND<std::complex<int>> &,
-        types::ArrayND<int> &);
+    template void Layers::ifft2d(const types::ArrayND<std::complex<double>> &, types::ArrayND<double> &);
+    template void Layers::ifft2d(const types::ArrayND<std::complex<double>> &, types::ArrayND<int> &);
 
     template <typename T>
     types::ArrayND<T> Layers::convolveFFT(
@@ -118,7 +108,7 @@ namespace layers
         }
 
         // FFT the image and the kernel
-        types::ArrayND<std::complex<T>> fftImage, fftFilter;
+        types::ArrayND<std::complex<double>> fftImage, fftFilter;
         fftImage.data.resize(image.data.size());
         fftFilter.data.resize(image.data.size());
         fftImage.shape = image.shape;
@@ -129,7 +119,7 @@ namespace layers
         fft2d(paddedFilter, fftFilter);
 
         // Multiply the FFTs
-        types::ArrayND<std::complex<T>> fftResult;
+        types::ArrayND<std::complex<double>> fftResult;
         fftResult.shape = image.shape;
         fftResult.stride = image.stride;
         fftResult.data.resize(image.data.size());
@@ -146,9 +136,6 @@ namespace layers
         result.data.resize(image.data.size());
 
         ifft2d(fftResult, result);
-
-        std::cout << "result: " << std::endl;
-        std::cout << result << std::endl;
 
         int validRows = imageHeight - filterHeight + 1;
         int validCols = imageWidth - filterWidth + 1;
@@ -375,8 +362,6 @@ namespace layers
                     utility::reshape_inplace(filter, {kernel_shape[0], kernel_shape[1]});
 
                     auto conv_result = convolveFFT(input_channel, filter);
-
-                    std::cout << conv_result << std::endl;
 
                     // Apply stride when accumulating results
                     for (int i = 0; i < out_height; i++)
