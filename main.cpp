@@ -280,8 +280,8 @@ ModelMetrics evaluateModel(const std::string &model_path, const std::string &seq
         input = utility::transpose(input, {0, 2, 3, 1});
 
         // Run inference
-        // auto [output, inference_time] = runInferenceOptimized(input, engine, modelReader);
-        auto [output, inference_time] = runInference(input, engine, modelReader);
+        auto [output, inference_time] = runInferenceOptimized(input, engine, modelReader);
+        // auto [output, inference_time] = runInference(input, engine, modelReader);
         inference_times.push_back(inference_time);
 
         // Check accuracy
